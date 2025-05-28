@@ -1,0 +1,117 @@
+测试流程
+进入docker当前目录后执行命令
+apt-get update
+apt-get install libssl-dev
+cp server.crt /usr/local/share/ca-certificates/
+update-ca-certificates
+
+g++ main.cpp -o myserver -lsqlite3 -lssl -lcrypto
+./myserver
+
+
+然后根据端口测试https ，输出如下说明测试成功
+curl -k -v  https://localhost:9000/          
+*   Trying [::1]:9000...
+* Connected to localhost (::1) port 9000
+* ALPN: curl offers h2,http/1.1
+* (304) (OUT), TLS handshake, Client hello (1):
+* (304) (IN), TLS handshake, Server hello (2):
+* (304) (IN), TLS handshake, Unknown (8):
+* (304) (IN), TLS handshake, Certificate (11):
+* (304) (IN), TLS handshake, CERT verify (15):
+* (304) (IN), TLS handshake, Finished (20):
+* (304) (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / AEAD-CHACHA20-POLY1305-SHA256
+* ALPN: server did not agree on a protocol. Uses default.
+* Server certificate:
+*  subject: CN=localhost
+*  start date: Mar  2 08:55:34 2024 GMT
+*  expire date: Mar  2 08:55:34 2025 GMT
+*  issuer: CN=localhost
+*  SSL certificate verify result: self signed certificate (18), continuing anyway.
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: localhost:9000
+> User-Agent: curl/8.4.0
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+* no chunk, no close, no size. Assume close to signal end
+
+
+也可以在docker中单独测试SSL
+运行openssl s_client -connect localhost:8080 -tls1_2
+输出
+CONNECTED(00000003)
+Can't use SSL_get_servername
+depth=0 CN = localhost
+verify return:1
+---
+Certificate chain
+ 0 s:CN = localhost
+   i:CN = localhost
+   a:PKEY: rsaEncryption, 2048 (bit); sigalg: RSA-SHA256
+   v:NotBefore: Mar  2 08:55:34 2024 GMT; NotAfter: Mar  2 08:55:34 2025 GMT
+---
+Server certificate
+-----BEGIN CERTIFICATE-----
+MIICrzCCAZcCFFkF5KG6r22q5a7SFXGwTo7VC+maMA0GCSqGSIb3DQEBCwUAMBQx
+EjAQBgNVBAMMCWxvY2FsaG9zdDAeFw0yNDAzMDIwODU1MzRaFw0yNTAzMDIwODU1
+MzRaMBQxEjAQBgNVBAMMCWxvY2FsaG9zdDCCASIwDQYJKoZIhvcNAQEBBQADggEP
+ADCCAQoCggEBAIWJaYIrJ0817Vst+iE6nOCgGUVEQVER6VKGC7sMTJ+CWYu+ivnZ
+m2eLyek51gTpGyVZaY3LloXkD0LyJtob+FftwqLQTNLbn6lz1umKUEBMnIkm49AA
+P2Ve1xWxYORN0qoiCAMpLyD0Koz5Nq0Rw1CFzHaixRbZTOJ4JBesOhRxqWTpiUaK
+RCTvchx2cZp93lv/UkMHGET5RZSLmvh5WfmeovsxyqH/DF7g4jLV0YIXeclE3gsH
+SA30tZ04iIONI5OvhsMJXfI9QCpv05NRe2AkNy4Gk1uOh0sgaBLyVqq5W3z8ocRD
+hibFKP+7qpCpuCGcZQj6XZ2VzIFGDd2FOPUCAwEAATANBgkqhkiG9w0BAQsFAAOC
+AQEAGPzHWfj/JTZA+xJgnZH8e5ZgZPFAy1FPzi0AHLfR1jejtAl76JeJ0gvxGXEq
+/sBXO+ZrmdFC6an8wk3Sw1ltH63pi2oyY9lDZCc9yjWNXpvhhC47Bp+29Q/paQhJ
+yQqXvNU8TUIalLb+81FJ1O3IPlWmoQzUFWvnzHTB0dIzFTsyy2HIFiOISEASeyiS
+o/YjBT2Nu/9q4XwZOkC4WbVn0uMfsfa08kGFQY7W4E7Px/+QhuCYruJoPJSkI3Pr
+sxJkX3tt+p822aMt5YTkqVuYrDlXub+VQMWpi7SoYHBtbIpJRJd0NdiOBIDknh3u
+bvOOW1S/6TE5Ql8n1wXQn0t/Bg==
+-----END CERTIFICATE-----
+subject=CN = localhost
+issuer=CN = localhost
+---
+No client certificate CA names sent
+Peer signing digest: SHA256
+Peer signature type: RSA-PSS
+Server Temp Key: X25519, 253 bits
+---
+SSL handshake has read 1316 bytes and written 281 bytes
+Verification: OK
+---
+New, TLSv1.2, Cipher is ECDHE-RSA-AES256-GCM-SHA384
+Server public key is 2048 bit
+Secure Renegotiation IS supported
+Compression: NONE
+Expansion: NONE
+No ALPN negotiated
+SSL-Session:
+    Protocol  : TLSv1.2
+    Cipher    : ECDHE-RSA-AES256-GCM-SHA384
+    Session-ID: CA82AFA6B7B85774E2F4441E699081253AA94973059B9CF1B831FF28ECF3F73C
+    Session-ID-ctx: 
+    Master-Key: 53E68214CFFC7E784E279C33FDEA2146F17FE7159726DCDD4BD7F33F46F29B1905F386B524FD126893FED50AC0137BAF
+    PSK identity: None
+    PSK identity hint: None
+    SRP username: None
+    TLS session ticket lifetime hint: 7200 (seconds)
+    TLS session ticket:
+    0000 - 45 0e 68 7d 59 66 dd bb-80 1b ab 0c 79 ba 30 dd   E.h}Yf......y.0.
+    0010 - 1e 30 3b b9 27 e1 3c 10-63 3b 70 07 30 0a e7 b7   .0;.'.<.c;p.0...
+    0020 - e2 36 85 8b 04 7e 63 37-5d e7 53 5c 5f 6f 11 f6   .6...~c7].S\_o..
+    0030 - 81 c6 28 be 66 1c f2 97-77 cb 1e 37 bf e4 9d c1   ..(.f...w..7....
+    0040 - 6c 42 a6 49 c0 02 64 09-2d b7 e6 98 06 56 95 bb   lB.I..d.-....V..
+    0050 - a5 c2 4d 1f 37 93 ab fe-72 77 29 cc 3a 7d 30 81   ..M.7...rw).:}0.
+    0060 - a7 8b 30 28 a6 af c3 f6-a9 c1 02 87 43 93 f5 16   ..0(........C...
+    0070 - 9a f8 b6 8a 7a 7a 91 ef-55 96 bf fa eb 31 7f 44   ....zz..U....1.D
+    0080 - 80 b9 11 32 39 eb e8 5c-fe 58 6f 00 72 ca 76 35   ...29..\.Xo.r.v5
+    0090 - 97 4e 9f a0 bb c0 ab 54-ca b4 61 c7 13 e6 96 b6   .N.....T..a.....
+
+    Start Time: 1709371701
+    Timeout   : 7200 (sec)
+    Verify return code: 0 (ok)
+    Extended master secret: yes
+---
